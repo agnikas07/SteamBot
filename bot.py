@@ -385,5 +385,3 @@ async def letsplay(interaction: discord.Interaction,
 
 if __name__ == "__main__":
     bot.run(TOKEN)
-
-# CICD TEST
