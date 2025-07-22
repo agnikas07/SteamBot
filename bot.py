@@ -291,10 +291,11 @@ async def letsplay(interaction: discord.Interaction,
         common_multiplayer_games_data.sort(key=lambda x: x["name"])
 
         class PickGameView(discord.ui.View):
-            def __init__(self, games_list_with_details, *args, **kwargs):
+            def __init__(self, games_list_with_details, message_to_edit: discord.Message, *args, **kwargs):
                 super().__init__(*args, **kwargs)
                 self.games_list_with_details = games_list_with_details
                 self.re_rolls_left = 3
+                self.message = message_to_edit
 
                 self.pick_button = discord.ui.Button(label="Pick a random game for us!", style=discord.ButtonStyle.primary)
                 self.add_item(self.pick_button)
@@ -331,7 +332,6 @@ async def letsplay(interaction: discord.Interaction,
                     await interaction.response.send_message("No games available to pick from.", ephemeral=True)
 
             async def reroll_game_button(self, interaction: discord.Interaction):
-                
                 if self.re_rolls_left > 0 and self.games_list_with_details:
                     self.re_rolls_left -= 1
                     random_game_data = random.choice(self.games_list_with_details)
@@ -369,18 +369,23 @@ async def letsplay(interaction: discord.Interaction,
                 for item in self.children:
                     if isinstance(item, discord.ui.Button):
                         item.disabled = True
-                await self.message.edit(view=self)
+                if self.message: 
+                    try:
+                        await self.message.edit(view=self)
+                    except discord.NotFound:
+                        print("Warning: Message for view timeout not found, possibly deleted.")
                 print("Game picker view timed out.")
 
 
-        view = PickGameView(common_multiplayer_games_data, timeout=300)
-
         game_names_only = [game["name"] for game in common_multiplayer_games_data]
-        await interaction.followup.send(
+        initial_response_message = await interaction.followup.send(
             f"🎉 **Common MULTIPLAYER games found for {len(active_players_game_lists)} players:**\n" +
-            "\n".join([f"- {name}" for name in game_names_only]),
-            view=view
+            "\n".join([f"- {name}" for name in game_names_only])
         )
+        
+        view = PickGameView(common_multiplayer_games_data, initial_response_message, timeout=300)
+        
+        await initial_response_message.edit(view=view)
 
 
 if __name__ == "__main__":
