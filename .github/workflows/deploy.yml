@@ -32,7 +32,7 @@ jobs:
           # Connect to the VM and execute commands
           ssh -o StrictHostKeyChecking=no ${VM_USER}@${VM_IP} << 'EOF'
             # Navigate to your bot's directory
-            cd /home/ubuntu/${{ VM_FILEPATH }}
+            cd /home/ubuntu/${{ secrets.VM_FILEPATH }}
 
             # Pull the latest changes from your GitHub repository
             git pull
