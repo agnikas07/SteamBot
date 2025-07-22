@@ -1,0 +1,45 @@
+name: Deploy Discord Bot to Oracle VM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add VM host key to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.VM_HOST_IP }} >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy to Oracle VM
+        env:
+          VM_USER: ${{ secrets.VM_USERNAME }}
+          VM_IP: ${{ secrets.VM_HOST_IP }}
+        run: |
+          # Connect to the VM and execute commands
+          ssh -o StrictHostKeyChecking=no ${VM_USER}@${VM_IP} << 'EOF'
+            # Navigate to your bot's directory
+            cd /home/ubuntu/${{ VM_FILEPATH }}
+
+            # Pull the latest changes from your GitHub repository
+            git pull
+
+            # For Python bots:
+            pip3 install -r requirements.txt
+
+            # Restart your Discord bot service
+            sudo systemctl restart SteamBot.service # <<< IMPORTANT: Adjust to your service name (e.g., my_discord_bot.service)
+          EOF
