@@ -378,8 +378,10 @@ async def letsplay(interaction: discord.Interaction,
 
 
         game_names_only = [game["name"] for game in common_multiplayer_games_data]
-        initial_response_message = await interaction.followup.send(
-            f"🎉 **Common MULTIPLAYER games found for {len(active_players_game_lists)} players:**\n" +
+
+        player_mentions = " ".join([player.mention for player in players])
+        initial_response_message = await interaction.folloup.send(
+            f"Hey {player_mentions}! 🎉 **Common MULTIPLAYER games found for {len(active_players_game_lists)} players:**\n" +
             "\n".join([f"- {name}" for name in game_names_only])
         )
         
